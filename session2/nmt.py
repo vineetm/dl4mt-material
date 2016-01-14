@@ -14,6 +14,7 @@ import os
 import warnings
 import sys
 import time
+import logging
 
 from collections import OrderedDict
 
@@ -687,10 +688,9 @@ def build_sampler(tparams, options, trng):
     init_state = get_layer('ff')[1](tparams, ctx_mean, options,
                                     prefix='ff_state', activ='tanh')
 
-    print 'Building f_init...',
+    logging.info('Building f_init...')
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
-    print 'Done'
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -731,11 +731,11 @@ def build_sampler(tparams, options, trng):
 
     # compile a function to do the whole thing above, next word probability,
     # sampled word for the next target, next hidden state to be used
-    print 'Building f_next..',
+    logging.info('Building f_next..')
     inps = [y, ctx, init_state]
     outs = [next_probs, next_sample, next_state]
     f_next = theano.function(inps, outs, name='f_next', profile=profile)
-    print 'Done'
+
 
     return f_init, f_next
 
@@ -858,8 +858,10 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
         if numpy.isnan(numpy.mean(probs)):
             ipdb.set_trace()
 
+        '''
         if verbose:
             print >>sys.stderr, '%d samples computed' % (n_done)
+        '''
 
     return numpy.array(probs)
 
@@ -1006,6 +1008,7 @@ def train(dim_word=100,  # word vector dimensionality
           validFreq=1000,
           saveFreq=1000,   # save the parameters after every saveFreq updates
           sampleFreq=100,   # generate some samples after every sampleFreq
+          baseDir=None,
           datasets=[
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
@@ -1019,10 +1022,19 @@ def train(dim_word=100,  # word vector dimensionality
 
     # Model options
     model_options = locals().copy()
+    logging.info(model_options)
+
+    if baseDir is not None:
+        dictionaries = ['%s'% os.path.join(baseDir, d) for d in dictionaries]
+        datasets = ['%s'% os.path.join(baseDir, dataset) for dataset in datasets]
+        valid_datasets = ['%s'% os.path.join(baseDir, dataset) for dataset in valid_datasets]
+
+    logging.info('Set base directory')
 
     # load dictionaries and invert them
     worddicts = [None] * len(dictionaries)
     worddicts_r = [None] * len(dictionaries)
+
     for ii, dd in enumerate(dictionaries):
         with open(dd, 'rb') as f:
             worddicts[ii] = pkl.load(f)
@@ -1035,7 +1047,7 @@ def train(dim_word=100,  # word vector dimensionality
         with open('%s.pkl' % saveto, 'rb') as f:
             models_options = pkl.load(f)
 
-    print 'Loading data'
+    logging.info('Loading data')
     train = TextIterator(datasets[0], datasets[1],
                          dictionaries[0], dictionaries[1],
                          n_words_source=n_words_src, n_words_target=n_words,
@@ -1047,7 +1059,7 @@ def train(dim_word=100,  # word vector dimensionality
                          batch_size=valid_batch_size,
                          maxlen=maxlen)
 
-    print 'Building model'
+    logging.info('Building model')
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
@@ -1062,13 +1074,13 @@ def train(dim_word=100,  # word vector dimensionality
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
 
-    print 'Buliding sampler'
+    logging.info('Buliding sampler')
     f_init, f_next = build_sampler(tparams, model_options, trng)
 
     # before any regularizer
-    print 'Building f_log_probs...',
+    logging.info('Building f_log_probs...')
     f_log_probs = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    #print 'Done'
 
     cost = cost.mean()
 
@@ -1090,13 +1102,13 @@ def train(dim_word=100,  # word vector dimensionality
         cost += alpha_reg
 
     # after all regularizers - compile the computational graph for cost
-    print 'Building f_cost...',
+    logging.info('Building f_cost...')
     f_cost = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    #print 'Done'
 
-    print 'Computing gradient...',
+    logging.info('Computing gradient...')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
-    print 'Done'
+    #print 'Done'
 
     # apply gradient clipping here
     if clip_c > 0.:
@@ -1112,11 +1124,11 @@ def train(dim_word=100,  # word vector dimensionality
 
     # compile the optimizer, the actual computational graph is compiled here
     lr = tensor.scalar(name='lr')
-    print 'Building optimizers...',
+    logging.info('Building optimizers...')
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
-    print 'Done'
+    #print 'Done'
 
-    print 'Optimization'
+    logging.info('Optimization')
 
     history_errs = []
     # reload history
@@ -1147,7 +1159,7 @@ def train(dim_word=100,  # word vector dimensionality
                                                 n_words=n_words)
 
             if x is None:
-                print 'Minibatch with zero sample under length ', maxlen
+                logging.info('Minibatch with zero sample under length %d'% maxlen)
                 uidx -= 1
                 continue
 
@@ -1164,24 +1176,22 @@ def train(dim_word=100,  # word vector dimensionality
             # check for bad numbers, usually we remove non-finite elements
             # and continue training - but not done here
             if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
+                logging.error('NaN detected')
                 return 1., 1., 1.
 
             # verbose
             if numpy.mod(uidx, dispFreq) == 0:
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'UD ', ud
+                logging.info('Epoch:%d Update:%d Cost:%s UD:%s '% (eidx, uidx, str(cost), str(ud)))
 
             # save the best model so far
             if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving...',
-
                 if best_p is not None:
                     params = best_p
                 else:
                     params = unzip(tparams)
                 numpy.savez(saveto, history_errs=history_errs, **params)
                 pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
-                print 'Done'
+                logging.info('Update:%d Saving to %s.pkl'% (uidx, saveto))
 
             # generate some samples with the model and display them
             if numpy.mod(uidx, sampleFreq) == 0:
@@ -1194,25 +1204,27 @@ def train(dim_word=100,  # word vector dimensionality
                                                maxlen=30,
                                                stochastic=stochastic,
                                                argmax=False)
-                    print 'Source ', jj, ': ',
+                    src_words= []
                     for vv in x[:, jj]:
                         if vv == 0:
                             break
                         if vv in worddicts_r[0]:
-                            print worddicts_r[0][vv],
+                            src_words.append(worddicts_r[0][vv])
                         else:
-                            print 'UNK',
-                    print
-                    print 'Truth ', jj, ' : ',
+                            src_words.append('UNK')
+                    logging.info('Source %d: %s'%(jj, ' '.join(src_words)))
+
+                    truth_words= []
                     for vv in y[:, jj]:
                         if vv == 0:
                             break
                         if vv in worddicts_r[1]:
-                            print worddicts_r[1][vv],
+                            truth_words.append(worddicts_r[1][vv])
                         else:
-                            print 'UNK',
-                    print
-                    print 'Sample ', jj, ': ',
+                            truth_words.append('UNK')
+                    logging.info('Truth %d: %s'%(jj, ' '.join(truth_words)))
+
+                    sample_words = []
                     if stochastic:
                         ss = sample
                     else:
@@ -1222,10 +1234,10 @@ def train(dim_word=100,  # word vector dimensionality
                         if vv == 0:
                             break
                         if vv in worddicts_r[1]:
-                            print worddicts_r[1][vv],
+                            sample_words.append(worddicts_r[1][vv])
                         else:
-                            print 'UNK',
-                    print
+                            sample_words.append('UNK')
+                    logging.info('Sample %d: %s'%(jj, ' '.join(sample_words)))
 
             # validate model on validation set and early stop if necessary
             if numpy.mod(uidx, validFreq) == 0:
@@ -1242,22 +1254,22 @@ def train(dim_word=100,  # word vector dimensionality
                         numpy.array(history_errs)[:-patience].min():
                     bad_counter += 1
                     if bad_counter > patience:
-                        print 'Early Stop!'
+                        logging.warning('Early Stop!')
                         estop = True
                         break
 
                 if numpy.isnan(valid_err):
                     ipdb.set_trace()
 
-                print 'Valid ', valid_err
+                logging.info('Update:%d Valid:%s '% (uidx, str(valid_err)))
 
             # finish after this many updates
             if uidx >= finish_after:
-                print 'Finishing after %d iterations!' % uidx
+                logging.warning('Finishing after %d iterations!' % uidx)
                 estop = True
                 break
 
-        print 'Seen %d samples' % n_samples
+        logging.info('Epoch:%d Samples:%d'% (eidx, n_samples))
 
         if estop:
             break
@@ -1269,7 +1281,7 @@ def train(dim_word=100,  # word vector dimensionality
     valid_err = pred_probs(f_log_probs, prepare_data,
                            model_options, valid).mean()
 
-    print 'Valid ', valid_err
+    logging.info('Final Valid:%s '% str(valid_err))
 
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p,
