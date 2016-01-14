@@ -24,6 +24,7 @@ def main(job_id, params):
                      saveFreq=100,
                      sampleFreq=100,
 		     baseDir='/u/vineeku6/data/yahoo-answers',
+		     word2vecFile='/u/vineeku6/storage/word-embeddings/trained/yahoo-300d-ep4/yahoo.vectors',
                      datasets=['train_src.txt.cleaned', 'train_target.txt.cleaned'],
                      valid_datasets=['valid_src.txt.cleaned', 'valid_target.txt.cleaned'],
                      dictionaries=['src.txt.cleaned.cat.pkl', 'target.txt.cleaned.pkl'],

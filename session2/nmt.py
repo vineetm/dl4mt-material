@@ -986,6 +986,30 @@ def sgd(lr, tparams, grads, x, mask, y, cost):
     return f_grad_shared, f_update
 
 
+def load_word2vec(word2vec_file, params, options, wordSrcDict, wordTargetDict):
+    from gensim.models import Word2Vec
+    model = Word2Vec.load(word2vec_file)
+    logging.info('Loaded %d word vectors from %s'% (len(model.vocab), word2vec_file))
+
+    numFoundSrc = 0
+    for w in wordSrcDict:
+        if wordSrcDict[w] >= options['n_words_src']:
+            continue
+        if w in model:
+            numFoundSrc += 1
+            params['Wemb'][wordSrcDict[w]] = model[w]
+
+    numFoundTarget = 0
+    for w in wordTargetDict:
+        if wordTargetDict[w] >= options['n_words']:
+            continue
+        if w in model:
+            numFoundTarget += 1
+            params['Wemb_dec'][wordTargetDict[w]] = model[w]
+
+    logging.info('Word2Vec: Src:(%d/%d) Target:(%d/%d)'% (numFoundSrc, options['n_words_src'], numFoundTarget, options['n_words']))
+
+
 def train(dim_word=100,  # word vector dimensionality
           dim=1000,  # the number of LSTM units
           encoder='gru',
@@ -1009,6 +1033,7 @@ def train(dim_word=100,  # word vector dimensionality
           saveFreq=1000,   # save the parameters after every saveFreq updates
           sampleFreq=100,   # generate some samples after every sampleFreq
           baseDir=None,
+          word2vecFile=None,
           datasets=[
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
@@ -1064,6 +1089,9 @@ def train(dim_word=100,  # word vector dimensionality
     # reload parameters
     if reload_ and os.path.exists(saveto):
         params = load_params(saveto, params)
+
+    if not reload_ and word2vecFile:
+      load_word2vec(word2vecFile, params, model_options, worddicts[0], worddicts[1])
 
     tparams = init_tparams(params)
 
