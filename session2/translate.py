@@ -68,7 +68,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     word_idict = dict()
     for kk, vv in word_dict.iteritems():
         word_idict[vv] = kk
-    word_idict[0] = '<eos>'
+    word_idict[0] = 'EOS'
     word_idict[1] = 'UNK'
 
     # load target dictionary and invert
@@ -77,7 +77,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     word_idict_trg = dict()
     for kk, vv in word_dict_trg.iteritems():
         word_idict_trg[vv] = kk
-    word_idict_trg[0] = '<eos>'
+    word_idict_trg[0] = 'EOS'
     word_idict_trg[1] = 'UNK'
 
     # create input and output queues for processes

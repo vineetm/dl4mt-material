@@ -25,7 +25,7 @@ def get_error(model, test_src, test_target):
         cost = \
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
-z
+
     dict_src = os.path.join(model_options['baseDir'], model_options['dictionaries'][0])
     dict_target = os.path.join(model_options['baseDir'], model_options['dictionaries'][1])
 
