@@ -23,7 +23,7 @@ class TranslationModel:
         self.word_idict[1] = 'UNK'
 
         # load target dictionary and invert
-        if self.target_dict is None:
+        if target_dict is None:
             self.word_dict_trg = self.word_dict
             self.word_idict_trg = self.word_idict
         else:
