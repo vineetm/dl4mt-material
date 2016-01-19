@@ -6,7 +6,7 @@ def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='trained model')
     parser.add_argument('srcd', help='src dictionary')
-    parser.add_argument('tgtd', help='target dictionary')
+    parser.add_argument('--tgtd', help='target dictionary', default=None)
     parser.add_argument('input', help='input text file')
     parser.add_argument('--out', help='report', default='report')
     parser.add_argument('--suffix', help='suffix to add to report', default='test')

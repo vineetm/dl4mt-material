@@ -522,7 +522,10 @@ def init_params(options):
 
     # embedding
     params['Wemb'] = norm_weight(options['n_words_src'], options['dim_word'])
-    params['Wemb_dec'] = norm_weight(options['n_words'], options['dim_word'])
+    if len(options['dictionaries']) == 2:
+        params['Wemb_dec'] = norm_weight(options['n_words'], options['dim_word'])
+    else:
+        logging.info('INIT, SKIP Wemb_dec')
 
     # encoder: bidirectional RNN
     params = get_layer(options['encoder'])[0](options, params,
@@ -612,7 +615,11 @@ def build_model(tparams, options):
     # to the right. This is done because of the bi-gram connections in the
     # readout and decoder rnn. The first target will be all zeros and we will
     # not condition on the last output.
-    emb = tparams['Wemb_dec'][y.flatten()]
+    if len(options['dictionaries']) == 1:
+        emb = tparams['Wemb'][y.flatten()]
+        logging.info('BUILD SKIP Wemb_dec, single dictionary found')
+    else:
+        emb = tparams['Wemb_dec'][y.flatten()]
     emb = emb.reshape([n_timesteps_trg, n_samples, options['dim_word']])
     emb_shifted = tensor.zeros_like(emb)
     emb_shifted = tensor.set_subtensor(emb_shifted[1:], emb[:-1])
@@ -697,9 +704,14 @@ def build_sampler(tparams, options, trng):
     init_state = tensor.matrix('init_state', dtype='float32')
 
     # if it's the first word, emb should be all zero and it is indicated by -1
-    emb = tensor.switch(y[:, None] < 0,
+    if len(options['dictionaries']) == 2:
+        emb = tensor.switch(y[:, None] < 0,
                         tensor.alloc(0., 1, tparams['Wemb_dec'].shape[1]),
                         tparams['Wemb_dec'][y])
+    else:
+        emb = tensor.switch(y[:, None] < 0,
+                        tensor.alloc(0., 1, tparams['Wemb'].shape[1]),
+                        tparams['Wemb'][y])
 
     # apply one step of conditional gru with attention
     proj = get_layer(options['decoder'])[1](tparams, emb, options,
@@ -999,6 +1011,11 @@ def load_word2vec(word2vec_file, params, options, wordSrcDict, wordTargetDict):
             numFoundSrc += 1
             params['Wemb'][wordSrcDict[w]] = model[w]
 
+    #There is no Wemb_dec in this case!
+    if wordTargetDict is None:
+        logging.info('Word2Vec: (%d/%d) SKIP Wemb_dec'% (numFoundSrc, options['n_words_src']))
+        return
+
     numFoundTarget = 0
     for w in wordTargetDict:
         if wordTargetDict[w] >= options['n_words']:
@@ -1057,8 +1074,8 @@ def train(dim_word=100,  # word vector dimensionality
     logging.info('Set base directory')
 
     # load dictionaries and invert them
-    worddicts = [None] * len(dictionaries)
-    worddicts_r = [None] * len(dictionaries)
+    worddicts = [None] * 2
+    worddicts_r = [None] * 2
 
     for ii, dd in enumerate(dictionaries):
         with open(dd, 'rb') as f:
@@ -1067,19 +1084,29 @@ def train(dim_word=100,  # word vector dimensionality
         for kk, vv in worddicts[ii].iteritems():
             worddicts_r[ii][vv] = kk
 
+    if len(dictionaries) == 1:
+        worddicts[1] = worddicts[0]
+        worddicts_r[1] = worddicts_r[0]
+
     # reload options
     if reload_ and os.path.exists(saveto):
         with open('%s.pkl' % saveto, 'rb') as f:
             models_options = pkl.load(f)
 
     logging.info('Loading data')
+    src_dict = dictionaries[0]
+    if len(dictionaries) == 1:
+        target_dict = None
+    else:
+        target_dict = dictionaries[1]
+
     train = TextIterator(datasets[0], datasets[1],
-                         dictionaries[0], dictionaries[1],
+                         src_dict, target_dict,
                          n_words_source=n_words_src, n_words_target=n_words,
                          batch_size=batch_size,
                          maxlen=maxlen)
     valid = TextIterator(valid_datasets[0], valid_datasets[1],
-                         dictionaries[0], dictionaries[1],
+                         src_dict, target_dict,
                          n_words_source=n_words_src, n_words_target=n_words,
                          batch_size=valid_batch_size,
                          maxlen=maxlen)
@@ -1091,7 +1118,10 @@ def train(dim_word=100,  # word vector dimensionality
         params = load_params(saveto, params)
 
     if not reload_ and word2vecFile:
-      load_word2vec(word2vecFile, params, model_options, worddicts[0], worddicts[1])
+        if target_dict is None:
+            load_word2vec(word2vecFile, params, model_options, worddicts[0], None)
+        else:
+            load_word2vec(word2vecFile, params, model_options, worddicts[0], worddicts[1])
 
     tparams = init_tparams(params)
 

@@ -27,7 +27,10 @@ def get_error(model, test_src, test_target):
     inps = [x, x_mask, y, y_mask]
 
     dict_src = os.path.join(model_options['baseDir'], model_options['dictionaries'][0])
-    dict_target = os.path.join(model_options['baseDir'], model_options['dictionaries'][1])
+    if len(model_options['dictionaries']) == 1:
+        dict_target = None
+    else:
+        dict_target = os.path.join(model_options['baseDir'], model_options['dictionaries'][1])
 
     valid = TextIterator(test_src, test_target,
                          dict_src,

@@ -22,8 +22,13 @@ class TextIterator:
         self.target = fopen(target, 'r')
         with open(source_dict, 'rb') as f:
             self.source_dict = pkl.load(f)
-        with open(target_dict, 'rb') as f:
-            self.target_dict = pkl.load(f)
+
+        #If only a single dictionary is specified, make target same as src
+        if target_dict is None:
+            self.target_dict = self.source_dict
+        else:
+            with open(target_dict, 'rb') as f:
+                self.target_dict = pkl.load(f)
 
         self.batch_size = batch_size
         self.maxlen = maxlen

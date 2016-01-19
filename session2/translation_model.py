@@ -23,13 +23,17 @@ class TranslationModel:
         self.word_idict[1] = 'UNK'
 
         # load target dictionary and invert
-        with open(target_dict, 'rb') as f:
-            self.word_dict_trg = pkl.load(f)
-        self.word_idict_trg = dict()
-        for kk, vv in self.word_dict_trg.iteritems():
-            self.word_idict_trg[vv] = kk
-        self.word_idict_trg[0] = 'EOS'
-        self.word_idict_trg[1] = 'UNK'
+        if self.target_dict is None:
+            self.word_dict_trg = self.word_dict
+            self.word_idict_trg = self.word_idict
+        else:
+            with open(target_dict, 'rb') as f:
+                self.word_dict_trg = pkl.load(f)
+            self.word_idict_trg = dict()
+            for kk, vv in self.word_dict_trg.iteritems():
+                self.word_idict_trg[vv] = kk
+            self.word_idict_trg[0] = 'EOS'
+            self.word_idict_trg[1] = 'UNK'
 
         from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
         self.trng = RandomStreams(1234)
