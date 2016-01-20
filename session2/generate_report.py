@@ -5,8 +5,6 @@ from translation_model import TranslationModel
 def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='trained model')
-    parser.add_argument('srcd', help='src dictionary')
-    parser.add_argument('--tgtd', help='target dictionary', default=None)
     parser.add_argument('input', help='input text file')
     parser.add_argument('--out', help='report', default='report')
     parser.add_argument('--suffix', help='suffix to add to report', default='test')
@@ -19,11 +17,11 @@ def main():
     args = setup_args()
     logging.info(args)
 
-    tm = TranslationModel(args.model, args.srcd, args.tgtd)
+    tm = TranslationModel(args.model)
     f = open('%s-%s.csv'% (args.out, args.suffix), 'w')
     csv_f = csv.writer(f, delimiter=',')
 
-    data = ['Text', 'Question']
+    data = ['Text', 'Question', 'Relevance', 'Correctness', 'Ambiguity']
     csv_f.writerow(data)
     for line in open(args.input, 'r'):
         data = []

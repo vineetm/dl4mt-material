@@ -1,15 +1,22 @@
 import cPickle as pkl
-import numpy
+import os, numpy, logging
 from nltk.tokenize import word_tokenize as tokenizer
 from nmt import (build_sampler, gen_sample, load_params,
                  init_params, init_tparams)
 
 
 class TranslationModel:
-    def __init__(self, trained_model, src_dict, target_dict):
+    def __init__(self, trained_model):
         # load model model_options
         with open('%s.pkl' % trained_model, 'rb') as f:
             self.options = pkl.load(f)
+
+        logging.info(self.options)
+        src_dict = os.path.join(self.options['baseDir'], self.options['dictionaries'][0])
+        if len(self.options['dictionaries']) == 1:
+            target_dict = None
+        else:
+            target_dict = os.path.join(self.options['baseDir'], self.options['dictionaries'][1])
 
         # load source dictionary and invert
         with open(src_dict, 'rb') as f:
