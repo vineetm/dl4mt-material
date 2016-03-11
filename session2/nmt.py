@@ -651,7 +651,7 @@ def build_model(tparams, options):
     logit = tensor.tanh(logit_lstm+logit_prev+logit_ctx)
     if options['use_dropout']:
         logit = dropout_layer(logit, use_noise, trng)
-    logit = get_layer('ff')[1](tparams, logit, options, 
+    logit = get_layer('ff')[1](tparams, logit, options,
                                prefix='ff_logit', activ='linear')
     logit_shp = logit.shape
     probs = tensor.nnet.softmax(logit.reshape([logit_shp[0]*logit_shp[1],
@@ -668,7 +668,7 @@ def build_model(tparams, options):
 
 
 # build a sampler
-def build_sampler(tparams, options, trng):
+def build_sampler(tparams, options, trng, use_noise):
     x = tensor.matrix('x', dtype='int64')
     xr = x[::-1]
     n_timesteps = x.shape[0]
@@ -732,6 +732,8 @@ def build_sampler(tparams, options, trng):
     logit_ctx = get_layer('ff')[1](tparams, ctxs, options,
                                    prefix='ff_logit_ctx', activ='linear')
     logit = tensor.tanh(logit_lstm+logit_prev+logit_ctx)
+    if options['use_dropout']:
+        logit = dropout_layer(logit, use_noise, trng)
     logit = get_layer('ff')[1](tparams, logit, options,
                                prefix='ff_logit', activ='linear')
 
@@ -1060,7 +1062,8 @@ def train(dim_word=100,  # word vector dimensionality
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
           use_dropout=False,
-          reload_=False):
+          reload_=False,
+          overwrite=False):
 
     # Model options
     model_options = locals().copy()
@@ -1090,6 +1093,7 @@ def train(dim_word=100,  # word vector dimensionality
 
     # reload options
     if reload_ and os.path.exists(saveto):
+        print 'Reloading model options'
         with open('%s.pkl' % saveto, 'rb') as f:
             models_options = pkl.load(f)
 
@@ -1115,6 +1119,7 @@ def train(dim_word=100,  # word vector dimensionality
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
+        print 'Reloading model parameters'
         params = load_params(saveto, params)
 
     if not reload_ and word2vecFile:
@@ -1132,8 +1137,8 @@ def train(dim_word=100,  # word vector dimensionality
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
 
-    logging.info('Buliding sampler')
-    f_init, f_next = build_sampler(tparams, model_options, trng)
+    logging.info('Bulding sampler')
+    f_init, f_next = build_sampler(tparams, model_options, trng, use_noise)
 
     # before any regularizer
     logging.info('Building f_log_probs...')
@@ -1188,12 +1193,17 @@ def train(dim_word=100,  # word vector dimensionality
 
     logging.info('Optimization')
 
+    best_p = None
+    bad_counter = 0
+    uidx = 0
+    estop = False
     history_errs = []
     # reload history
     if reload_ and os.path.exists(saveto):
-        history_errs = list(numpy.load(saveto)['history_errs'])
-    best_p = None
-    bad_counter = 0
+        rmodel = numpy.load(saveto)
+        history_errs = list(rmodel['history_errs'])
+        if 'uidx' in rmodel:
+            uidx = rmodel['uidx']
 
     if validFreq == -1:
         validFreq = len(train[0])/batch_size
@@ -1202,8 +1212,6 @@ def train(dim_word=100,  # word vector dimensionality
     if sampleFreq == -1:
         sampleFreq = len(train[0])/batch_size
 
-    uidx = 0
-    estop = False
     for eidx in xrange(max_epochs):
         n_samples = 0
 
@@ -1241,15 +1249,27 @@ def train(dim_word=100,  # word vector dimensionality
             if numpy.mod(uidx, dispFreq) == 0:
                 logging.info('Epoch:%d Update:%d Cost:%s UD:%s '% (eidx, uidx, str(cost), str(ud)))
 
-            # save the best model so far
+            # save the best model so far, in addition, save the latest model
+            # into a separate file with the iteration number for external eval
             if numpy.mod(uidx, saveFreq) == 0:
+                logging.info('Saving the best model...')
                 if best_p is not None:
                     params = best_p
                 else:
                     params = unzip(tparams)
-                numpy.savez(saveto, history_errs=history_errs, **params)
+                numpy.savez(saveto, history_errs=history_errs, uidx=uidx, **params)
                 pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
                 logging.info('Update:%d Saving to %s.pkl'% (uidx, saveto))
+
+                # save with uidx
+                if not overwrite:
+                    print 'Saving the model at iteration {}...'.format(uidx),
+                    saveto_uidx = '{}.iter{}.npz'.format(
+                        os.path.splitext(saveto)[0], uidx)
+                    numpy.savez(saveto_uidx, history_errs=history_errs,
+                                uidx=uidx, **unzip(tparams))
+                    print 'Done'
+
 
             # generate some samples with the model and display them
             if numpy.mod(uidx, sampleFreq) == 0:
@@ -1344,6 +1364,7 @@ def train(dim_word=100,  # word vector dimensionality
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p,
                 history_errs=history_errs,
+                uidx=uidx,
                 **params)
 
     return valid_err
