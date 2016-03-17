@@ -23,17 +23,18 @@ def main(job_id, params):
                      dispFreq=500,
                      saveFreq=500,
                      sampleFreq=500,
-		     baseDir='/u/vineeku6/data/question-generation/yahoo-answers',
+		     baseDir='/u/vineeku6/data/question-generation/yans',
 		     word2vecFile='/u/vineeku6/storage/word-embeddings/trained/yahoo-300d-ep4/yahoo.vectors',
                      datasets=['train_a.txt', 'train_q.txt'],
                      valid_datasets=['valid_a.txt', 'valid_q.txt'],
                      dictionaries=['a.txt.pkl', 'q.txt.pkl'],
-                     use_dropout=params['use-dropout'][0])
+                     use_dropout=params['use-dropout'][0],
+		     overwrite=True)
     return validerr
 
 if __name__ == '__main__':
     main(0, {
-        'model': ['yahoo-bm.npz'],
+        'model': ['yans.npz'],
         'dim_word': [300],
         'dim': [300],
         'n-words': [40000], 

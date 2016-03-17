@@ -1,5 +1,5 @@
 import cPickle as pkl
-import os, numpy, logging
+import os, numpy, logging, theano
 from nltk.tokenize import word_tokenize as tokenizer
 from nmt import (build_sampler, gen_sample, load_params,
                  init_params, init_tparams)
@@ -53,7 +53,8 @@ class TranslationModel:
         self.tparams = init_tparams(params)
 
         # word index
-        self.f_init, self.f_next = build_sampler(self.tparams, self.options, self.trng)
+    	use_noise = theano.shared(numpy.float32(0.))
+        self.f_init, self.f_next = build_sampler(self.tparams, self.options, self.trng, use_noise)
 
     def sent2seq(self, sentence):
         sentence = sentence.lower()
