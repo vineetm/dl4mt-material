@@ -526,7 +526,7 @@ def build_model(tparams, options):
                                             one_step=False,
                                             init_state=init_state)
     # hidden states of the decoder gru
-    proj_h = proj[0]
+    proj_h = proj
 
     # we will condition on the last state of the encoder only
     ctxs = ctx[None, :, :]
@@ -911,7 +911,7 @@ def train(dim_word=100,  # word vector dimensionality
     if reload_ and os.path.exists(saveto):
         print 'Reloading model options'
         with open('%s.pkl' % saveto, 'rb') as f:
-            models_options = pkl.load(f)
+            model_options = pkl.load(f)
 
     print 'Loading data'
     train = TextIterator(datasets[0], datasets[1],

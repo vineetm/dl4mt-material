@@ -1095,7 +1095,7 @@ def train(dim_word=100,  # word vector dimensionality
     if reload_ and os.path.exists(saveto):
         print 'Reloading model options'
         with open('%s.pkl' % saveto, 'rb') as f:
-            models_options = pkl.load(f)
+            model_options = pkl.load(f)
 
     logging.info('Loading data')
     src_dict = dictionaries[0]
