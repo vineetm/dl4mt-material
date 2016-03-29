@@ -1093,7 +1093,8 @@ def train(dim_word=100,  # word vector dimensionality
 
     # reload options
     if reload_ and os.path.exists(saveto):
-        print 'Reloading model options'
+        #print 'Reloading model options'
+        logging.info('Reloading model options')
         with open('%s.pkl' % saveto, 'rb') as f:
             model_options = pkl.load(f)
 
@@ -1119,7 +1120,8 @@ def train(dim_word=100,  # word vector dimensionality
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
-        print 'Reloading model parameters'
+        #print 'Reloading model parameters'
+        logging.info('Reloading model parameters')
         params = load_params(saveto, params)
 
     if not reload_ and word2vecFile:
@@ -1263,12 +1265,13 @@ def train(dim_word=100,  # word vector dimensionality
 
                 # save with uidx
                 if not overwrite:
-                    print 'Saving the model at iteration {}...'.format(uidx),
+                    #print 'Saving the model at iteration {}...'.format(uidx),
+                    logging.info('Saving the model at iteration {}...'.format(uidx))
                     saveto_uidx = '{}.iter{}.npz'.format(
                         os.path.splitext(saveto)[0], uidx)
                     numpy.savez(saveto_uidx, history_errs=history_errs,
                                 uidx=uidx, **unzip(tparams))
-                    print 'Done'
+                   # print 'Done'
 
 
             # generate some samples with the model and display them
