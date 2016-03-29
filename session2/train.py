@@ -23,21 +23,21 @@ def main(job_id, params):
                      dispFreq=500,
                      saveFreq=500,
                      sampleFreq=500,
-		     baseDir='/u/vineeku6/data/question-generation/yans',
-		     word2vecFile='/u/vineeku6/storage/word-embeddings/trained/yahoo-300d-ep4/yahoo.vectors',
-                     datasets=['train_a.txt', 'train_q.txt'],
-                     valid_datasets=['valid_a.txt', 'valid_q.txt'],
-                     dictionaries=['a.txt.pkl', 'q.txt.pkl'],
+		     baseDir='/u/vineeku6/storage/train-data/yans',
+		     word2vecFile='/u/vineeku6/storage/data/yahoo-answers/word2vec/yans.vectors',
+                     datasets=['train_src.txt', 'train_target.txt'],
+                     valid_datasets=['valid_src.txt', 'valid_target.txt'],
+                     dictionaries=['src.txt.pkl', 'target.txt.pkl'],
                      use_dropout=params['use-dropout'][0],
 		     overwrite=True)
     return validerr
 
 if __name__ == '__main__':
     main(0, {
-        'model': ['yans.npz'],
+        'model': ['test.npz'],
         'dim_word': [300],
         'dim': [300],
-        'n-words': [40000], 
+        'n-words': [30000], 
         'n-words-src': [80000], 
         'optimizer': ['adam'],
         'decay-c': [0.], 
