@@ -21,6 +21,7 @@ def setup_args():
     parser.add_argument('--maxlen', default=50, type=int, help='Maximum length of sequence')
     parser.add_argument('--lr', default=0.0001, type=float, help='Learning Rate')
     parser.add_argument('--clipc', default=1.0, type=float, help='Gradient Clip threshold')
+    parser.add_argument('--alphac', default=0.0, type=float, help='Alpha')
     parser.add_argument('--decay', default=0.0, type=float, help='Decay rate')
     args = parser.parse_args()
     return args
@@ -39,6 +40,7 @@ def main():
                      n_words_src=args.srcwords,
                      decay_c=args.decay,
                      clip_c=args.clipc,
+                     alpha_c=args.alphac,
                      lrate=args.lr,
                      optimizer='adam',
                      patience=1000,
@@ -56,9 +58,9 @@ def main():
                      dictionaries=['src.txt.pkl', 'target.txt.pkl'],
                      use_dropout=False,
                      overwrite=True)
-    return validerr
+
+    logging.info('FINAL Validation error: '+ str(validerr))
 
 
 if __name__ == '__main__':
-    valid_error = main()
-    logging.info('FINAL Valid Error: '+ valid_error)
+    main()
