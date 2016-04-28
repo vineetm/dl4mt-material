@@ -1,4 +1,5 @@
-import argparse, logging, csv, codecs
+import argparse, logging, codecs
+import unicodecsv as csv
 from translation_model import TranslationModel
 
 
@@ -19,8 +20,8 @@ def main():
     logging.info(args)
 
     tm = TranslationModel(args.model)
-    f = codecs.open('%s-%s.csv'% (args.out, args.suffix), 'w', 'utf-8')
-    csv_f = csv.writer(f, delimiter=',')
+    f = codecs.open('%s-%s.csv'% (args.out, args.suffix), 'w')
+    csv_f = csv.writer(f, delimiter=',', encoding='utf-8')
 
     data = ['Src', 'Target', 'Gold Standard']
     csv_f.writerow(data)
