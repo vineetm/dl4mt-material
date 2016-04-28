@@ -6,6 +6,7 @@ def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='trained model')
     parser.add_argument('input', help='input text file')
+    parser.add_argument('gold', help='gold standard for input file')
     parser.add_argument('--out', help='report', default='report')
     parser.add_argument('--suffix', help='suffix to add to report', default='test')
     args = parser.parse_args()
@@ -21,13 +22,16 @@ def main():
     f = open('%s-%s.csv'% (args.out, args.suffix), 'w')
     csv_f = csv.writer(f, delimiter=',')
 
-    data = ['Text', 'Question', 'Relevance', 'Correctness', 'Ambiguity']
+    data = ['Src', 'Target', 'Gold Standard']
     csv_f.writerow(data)
-    for line in open(args.input, 'r'):
+    input_lines = open(args.input, 'r').readlines()
+    gold_lines = open(args.gold, 'r').readlines()
+    for input_line, gold_line in zip(input_lines, gold_lines):
         data = []
-        data.append(line.strip())
-        results = tm.translate(line.strip())
+        data.append(input_line.strip())
+        results = tm.translate(input_line.strip())
         data.append(results[0][1])
+        data.append(gold_line.strip())
         csv_f.writerow(data)
 
 if __name__ == '__main__':
