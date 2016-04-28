@@ -1,4 +1,4 @@
-import argparse, logging, csv
+import argparse, logging, csv, codecs
 from translation_model import TranslationModel
 
 
@@ -19,13 +19,13 @@ def main():
     logging.info(args)
 
     tm = TranslationModel(args.model)
-    f = open('%s-%s.csv'% (args.out, args.suffix), 'w')
+    f = codecs.open('%s-%s.csv'% (args.out, args.suffix), 'w', 'utf-8')
     csv_f = csv.writer(f, delimiter=',')
 
     data = ['Src', 'Target', 'Gold Standard']
     csv_f.writerow(data)
-    input_lines = open(args.input, 'r').readlines()
-    gold_lines = open(args.gold, 'r').readlines()
+    input_lines = codecs.open(args.input, 'r', 'utf-8').readlines()
+    gold_lines = codecs.open(args.gold, 'r', 'utf-8').readlines()
     for input_line, gold_line in zip(input_lines, gold_lines):
         data = []
         data.append(input_line.strip())
