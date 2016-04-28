@@ -34,8 +34,8 @@ def main():
 
     validerr = train(saveto=args.model + '.npz',
                      reload_=False,
-                     dim_word=args.dimhidden,
-                     dim=args.dimword,
+                     dim=args.dimhidden,
+                     dim_word=args.dimword,
                      n_words=args.targetwords,
                      n_words_src=args.srcwords,
                      decay_c=args.decay,
