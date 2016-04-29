@@ -27,6 +27,8 @@ def main():
     csv_f.writerow(data)
     input_lines = codecs.open(args.input, 'r', 'utf-8').readlines()
     gold_lines = codecs.open(args.gold, 'r', 'utf-8').readlines()
+
+    fw_sents = codecs.open('%s-%s-sents.out', 'w', 'utf-8')
     for input_line, gold_line in zip(input_lines, gold_lines):
         data = []
         data.append(input_line.strip())
@@ -34,6 +36,7 @@ def main():
         data.append(results[0][1])
         data.append(gold_line.strip())
         csv_f.writerow(data)
+        fw_sents.write(results[0][1] + '\n')
 
 if __name__ == '__main__':
     main()
