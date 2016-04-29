@@ -1,14 +1,14 @@
-import argparse, codecs, logging
+import argparse, codecs, logging, nltk
 import unicodecsv as csv
-from nltk.align.bleu_score import bleu
+from nltk.translate.bleu_score import sentence_bleu as bleu
 import numpy as np
 
 def setup_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('src', 'Source file')
-    parser.add_argument('target', 'Translated data')
-    parser.add_argument('gold', 'Gold output file')
-    parser.add_argument('model', 'Model Name')
+    parser.add_argument('src', help='Source file')
+    parser.add_argument('target', help='Translated data')
+    parser.add_argument('gold', help='Gold output file')
+    parser.add_argument('model', help='Model Name')
     args = parser.parse_args()
     return args
 
@@ -17,7 +17,7 @@ def main():
     args = setup_args()
     logging.info(args)
 
-    f = codecs.open('%s-%s.csv'% (args.out, args.suffix), 'w')
+    f = codecs.open('report-%s.csv'% args.model, 'w')
     csv_f = csv.writer(f, delimiter=',', encoding='utf-8')
 
     src_lines = codecs.open(args.src, 'r', 'utf-8').readlines()
@@ -30,6 +30,7 @@ def main():
     gold_lines_nounk = codecs.open(args.gold + '.nounk', 'r', 'utf-8').readlines()
 
     data = ['Src', 'Src_UNK', 'Target_UNK', 'Target', 'Gold_UNK', 'Gold', 'BLEU']
+    csv_f.writerow(data)
 
     num_lines = len(gold_lines)
     logging.info('Num Lines: %d'% num_lines)
@@ -47,7 +48,11 @@ def main():
         data.append(gold_lines[index].strip())
         data.append(gold_lines_nounk[index].strip())
 
-        bleu_score = bleu(target_lines[index].split(), [gold_lines[index].split()], [1])
+	if len(target_lines[index].split()) == 0:
+		bleu_score = 0.0
+	else:
+        	bleu_score = bleu([gold_lines[index].split()], target_lines[index].split(), weights=(1.0,))
+	logging.info('sentence:%d bleu:%f'%(index, bleu_score))
         bleu_scores.append(bleu_score)
         data.append(str(bleu_score))
         csv_f.writerow(data)
