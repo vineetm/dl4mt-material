@@ -8,8 +8,8 @@ def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', help='Input file with unk')
     parser.add_argument('src', help='nounk file')
-    parser.add_argument('--dict', help='Dictionary', default='src.txt.pkl')
     parser.add_argument('vocab', help='Vocab size', type=int)
+    parser.add_argument('--dict', help='Dictionary', default='src.txt.pkl')
     args = parser.parse_args()
     return args
 
@@ -47,7 +47,7 @@ def main():
     input_lines = codecs.open(args.input, 'r', 'utf-8').readlines()
     src_lines = codecs.open(args.src, 'r', 'utf-8').readlines()
 
-    fw_nounk = codecs.open(args.input, 'w', 'utf-8')
+    fw_nounk = codecs.open(args.input + '.nounk', 'w', 'utf-8')
     src_dict = pkl.load(open(args.dict, 'r'))
 
     for input_line, src_line in zip(input_lines, src_lines):
