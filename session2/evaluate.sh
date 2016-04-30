@@ -8,6 +8,6 @@ OUT=out-$MODEL.txt
 VOCAB=500
 
 python translate_all.py $MODEL.npz $INPUT $OUT
-python convert_unk.py $OUT $INPUT.nounk $VOCAB --dict $DICT 
+python convert_symbols.py $OUT $INPUT.nounk $VOCAB --dict $DICT 
 
 python report.py $INPUT $OUT $GOLD $MODEL 
