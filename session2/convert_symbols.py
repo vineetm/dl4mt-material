@@ -48,7 +48,6 @@ def main():
     output_fw = codecs.open(args.input + '.nounk', 'w', 'utf-8')
 
     for coded_line, decoded_line, input_line in zip(coded_fr, decoded_fr, input_fr):
-        print coded_line
         codes_map = find_code_map(coded_line, decoded_line)
         output_fw.write(replace_codes(codes_map, input_line) + '\n')
 
