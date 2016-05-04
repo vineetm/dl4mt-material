@@ -1,14 +1,30 @@
 import argparse, logging, codecs
 from translation_model import TranslationModel
-
+from nltk.translate.bleu_score import sentence_bleu as bleu
 
 def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='trained model')
     parser.add_argument('input', help='input sentences')
     parser.add_argument('out', help='translated sentences')
+    parser.add_argument('--all', dest='all', action='store_true', help='Check all translations')
     args = parser.parse_args()
     return args
+
+
+def find_best_translation(input_line, results):
+    best_bleu_score = 0.0
+    best_index = 0
+
+    for index, result in enumerate(results):
+        if len(result.split()) == 0:
+            continue
+        bleu_score = bleu([input_line.split()], result.split(), weights=(1.0,))
+        if bleu_score > best_bleu_score:
+            best_bleu_score = bleu_score
+            best_index = index
+
+    return best_index
 
 
 def main():
@@ -19,8 +35,13 @@ def main():
     tm = TranslationModel(args.model)
     fw_out = codecs.open(args.out, 'w', 'utf-8')
     for input_line in codecs.open(args.input, 'r', 'utf-8'):
-        results = tm.translate(input_line.strip())
-        fw_out.write(results[0][1] + '\n')
+        results = tm.translate(input_line.strip(), k = 20)
+        if args.all:
+            index = find_best_translation(input_line, results)
+        else:
+            index = 0
+
+        fw_out.write(results[0][index] + '\n')
 
     fw_out.close()
 
