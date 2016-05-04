@@ -17,9 +17,9 @@ def find_best_translation(input_line, results):
     best_index = 0
 
     for index, result in enumerate(results):
-        if len(result.split()) == 0:
+        if len(result[1].split()) == 0:
             continue
-        bleu_score = bleu([input_line.split()], result.split(), weights=(1.0,))
+        bleu_score = bleu([input_line.split()], result[1].split(), weights=(1.0,))
         if bleu_score > best_bleu_score:
             best_bleu_score = bleu_score
             best_index = index
@@ -41,7 +41,7 @@ def main():
         else:
             index = 0
 
-        fw_out.write(results[0][index] + '\n')
+        fw_out.write(results[index][1] + '\n')
 
     fw_out.close()
 
