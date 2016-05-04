@@ -34,6 +34,8 @@ def main():
 
     tm = TranslationModel(args.model)
     fw_out = codecs.open(args.out, 'w', 'utf-8')
+
+    line_num = 0
     for input_line in codecs.open(args.input, 'r', 'utf-8'):
         results = tm.translate(input_line.strip(), k = 20)
         if args.all:
@@ -41,8 +43,9 @@ def main():
         else:
             index = 0
 
+        logging.info('Line:%d best_index:%d'% (line_num, index))
         fw_out.write(results[index][1] + '\n')
-
+        line_num += 1
     fw_out.close()
 
 if __name__ == '__main__':
