@@ -24,7 +24,7 @@ def find_best_translation(input_line, results):
             best_bleu_score = bleu_score
             best_index = index
 
-    return best_index
+    return best_index, best_bleu_score
 
 
 def main():
@@ -39,11 +39,12 @@ def main():
     for input_line in codecs.open(args.input, 'r', 'utf-8'):
         results = tm.translate(input_line.strip(), k = 20)
         if args.all:
-            index = find_best_translation(input_line, results)
+            index, best_bleu_score = find_best_translation(input_line, results)
         else:
+            best_bleu_score = -1.0
             index = 0
 
-        logging.info('Line:%d best_index:%d'% (line_num, index))
+        logging.info('Line:%d best_index:%d best_bleu:%f'% (line_num, index, best_bleu_score))
         fw_out.write(results[index][1] + '\n')
         line_num += 1
     fw_out.close()
