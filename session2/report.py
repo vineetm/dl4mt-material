@@ -68,7 +68,7 @@ def main():
 
     final_bleu = corpus_bleu(references, hypotheses)
     unigram_bleu = corpus_bleu(references, hypotheses, weights=(1.0,))
-    logging.info('Final BLEU: %f Unigram_BLEU'% (final_bleu, unigram_bleu))
+    logging.info('Final BLEU: %f Unigram_BLEU: %f '% (final_bleu, unigram_bleu))
 
 
 if __name__ == '__main__':
