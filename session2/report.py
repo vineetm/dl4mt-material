@@ -67,7 +67,8 @@ def main():
         csv_f.writerow(data)
 
     final_bleu = corpus_bleu(references, hypotheses)
-    logging.info('Final BLEU: %f'% final_bleu)
+    unigram_bleu = corpus_bleu(references, hypotheses, weights=(1.0,))
+    logging.info('Final BLEU: %f Unigram_BLEU'% (final_bleu, unigram_bleu))
 
 
 if __name__ == '__main__':
