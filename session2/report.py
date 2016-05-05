@@ -30,7 +30,7 @@ def main():
     gold_lines = codecs.open(args.gold, 'r', 'utf-8').readlines()
     gold_lines_nounk = codecs.open(args.gold + '.nounk', 'r', 'utf-8').readlines()
 
-    data = ['Src', 'Src_UNK', 'Target_UNK', 'Target', 'Gold_UNK', 'Gold', 'BLEU', 'BLUE2', 'BLEU4']
+    data = ['Src', 'Src_UNK', 'Target_UNK', 'Target', 'Gold_UNK', 'Gold', 'BLEU1']
     csv_f.writerow(data)
 
     num_lines = len(gold_lines)
@@ -52,23 +52,18 @@ def main():
 
         gold = gold_lines[index].strip().split()
         output = target_lines[index].strip().split()
-
-        references.append([gold])
-        hypotheses.append(output)
+        default = 'UNK UNK UNK UNK'.split()
 
         if len(output) < 4:
             bleu_score = 0.0
-            bleu_score_bigram = 0.0
-            bleu_score_fourgram = 0.0
+            hypotheses.append(default)
         else:
             bleu_score = sentence_bleu([gold], output, weights=(1.0,))
-            bleu_score_bigram = sentence_bleu([gold], output, weights=(0.5, 0.5))
-            bleu_score_fourgram = sentence_bleu([gold], output)
+            hypotheses.append(output)
 
+        references.append([gold])
         logging.info('sentence:%d bleu:%f'%(index, bleu_score))
         data.append(str(bleu_score))
-        data.append(str(bleu_score_bigram))
-        data.append(str(bleu_score_fourgram))
         csv_f.writerow(data)
 
     final_bleu = corpus_bleu(references, hypotheses)
