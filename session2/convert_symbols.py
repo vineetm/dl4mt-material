@@ -30,7 +30,12 @@ def replace_codes(codes_map, orig_line):
 
     for token in tokens:
         if token in codes_map:
-            final_tokens.append(codes_map[token])
+            replace_token = codes_map[token]
+            replace_tokens = replace_token.split('_')
+            if len(replace_tokens) == 1:
+                final_tokens.append(replace_token)
+            else:
+                final_tokens.extend(replace_tokens)
         else:
             final_tokens.append(token)
 
