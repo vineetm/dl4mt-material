@@ -55,7 +55,8 @@ def main():
                      word2vecFile=args.wordvec,
                      datasets=['train_src.txt', 'train_target.txt'],
                      valid_datasets=['valid_src.txt', 'valid_target.txt'],
-                     dictionaries=['src.txt.pkl', 'target.txt.pkl'],
+                     #dictionaries=['src.txt.pkl', 'target.txt.pkl'],
+                     dictionaries=['all.txt.pkl'],
                      use_dropout=False,
                      overwrite=True)
 
