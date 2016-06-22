@@ -1,7 +1,5 @@
 #!/bin/sh
-UNK_20='/u/vineeku6/data-el/entity/freq-20'
-
-BASE=$UNK_20
+BASE=$1
 ./submit-eval.sh ellipsis-exp00 $BASE
 
 ./submit-eval.sh ellipsis-exp01 $BASE

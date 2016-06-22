@@ -1,5 +1,6 @@
 #!/bin/sh
-DATA='/u/vineeku6/data-el/entity/freq-20'
+DATA=$1
+VOCAB=$2
 WORD_VEC_300='/u/vineeku6/storage/word-embeddings/trained/wiki-300d-ep4/wiki.vectors'
 WORD_VEC_200='/u/vineeku6/storage/word-embeddings/trained/wiki-200d/wiki.vectors'
 WORD_VEC_100='/u/vineeku6/storage/word-embeddings/trained/wiki-100d/wiki.vectors'
@@ -9,7 +10,6 @@ QUEUE='x86_short'
 #QUEUE='x86_excl'
 
 BASE=$DATA
-VOCAB=742
 
 ##Experiments with d=50
 WORD_VEC=$WORD_VEC_50
@@ -144,7 +144,7 @@ ALPHA=0.0001
 jbsub -name $MODEL -out $MODEL.out -mem 10g -queue $QUEUE -cores 2+1 python train.py $BASE $WORD_VEC $MODEL --srcwords $VOCAB --targetwords $VOCAB --dimhidden $H --dimword $D --alphac $ALPHA
 
 ##Experiments with d=300
-WORD_VEC=$WORD_VEC_200
+WORD_VEC=$WORD_VEC_300
 D=300
 
 H=300
