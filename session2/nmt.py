@@ -22,6 +22,8 @@ from data_iterator import TextIterator
 
 profile = False
 
+#Set a fixed random seed
+numpy.random.seed(1234)
 
 # push parameters to Theano shared variables
 def zipp(params, tparams):
