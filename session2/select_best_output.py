@@ -12,6 +12,10 @@ def setup_args():
     return args
 
 
+def get_score(candidate, input):
+    return bleu([input().split()], candidate, weights=(1.0,))
+
+
 def main():
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     args = setup_args()
@@ -26,14 +30,13 @@ def main():
     input_lines = codecs.open(args.input, 'r').readlines()
 
     fw = codecs.open(args.output, 'w', 'utf-8')
-
     for index, (out1, out2, input) in enumerate(zip(out1_lines, out2_lines, input_lines)):
         q2 = input.split('END')[2]
-        bleu_1 = bleu([q2.split()], out1, weights=(1.0,))
-        bleu_2 = bleu([q2.split()], out2, weights=(1.0,))
-        logging.info('Index:%d Bleu1: %f Bleu2: %f'% (index, bleu_1, bleu_2))
+        score_1 = get_score(q2, out1)
+        score_2 = get_score(q2, out2)
+        logging.info('Index:%d Bleu1: %f Bleu2: %f'% (index, score_1, score_2))
 
-        if bleu_1 > bleu_2:
+        if score_1 > score_2:
             picked_num1 += 1
             fw.write(out1.strip() + '\n')
         else:
