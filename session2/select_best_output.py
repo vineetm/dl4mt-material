@@ -40,5 +40,7 @@ def main():
             picked_num2 += 1
             fw.write(out2.strip() + '\n')
 
+    logging.info('Picked1: %d Picked:%d'% (picked_num1, picked_num2))
+
 if __name__ == '__main__':
     main()
