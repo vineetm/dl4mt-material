@@ -13,7 +13,7 @@ def setup_args():
 
 
 def get_score(candidate, input):
-    return bleu([input().split()], candidate, weights=(1.0,))
+    return bleu([input.split()], candidate, weights=(1.0,))
 
 
 def main():
