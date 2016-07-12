@@ -68,6 +68,8 @@ def main():
         logging.info('Gold_line: %s' % gold_line)
 
         unk_map = build_unk_map(src_line, src_line_nounk)
+        logging.info('UNK_map: %s'% str(unk_map))
+        
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
             logging.info('Tr:%d ::%s'%(idx, translation_nounk))
