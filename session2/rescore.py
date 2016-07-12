@@ -1,6 +1,7 @@
 import argparse, logging, codecs
 from translation_model import TranslationModel
 from collections import OrderedDict
+from nltk.translate.bleu_score import sentence_bleu as bleu
 
 SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
 
@@ -72,7 +73,8 @@ def main():
 
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
-            logging.info('Tr:%d ::%s'%(idx, translation_nounk))
+            bleu_nounk = bleu([gold_line.split()], translation_nounk.split(), (1,1,1,1))
+            logging.info('Tr:%d ::%s BLEU:%f'%(idx, translation_nounk, bleu_nounk))
 
 
 if __name__ == '__main__':
