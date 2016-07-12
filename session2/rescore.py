@@ -1,5 +1,6 @@
 import argparse, logging, codecs
 from translation_model import TranslationModel
+from collections import OrderedDict
 
 SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
 
@@ -23,6 +24,30 @@ def setup_args():
     args = parser.parse_args()
     return args
 
+
+def build_unk_map(source, source_nounk):
+    tokens = source.split()
+    tokens_nounk = source_nounk.split()
+    assert len(tokens) == len(tokens_nounk)
+
+    unk_map = OrderedDict()
+    for token, token_nounk in zip(tokens, tokens_nounk):
+        if token != tokens_nounk:
+            unk_map[token_nounk] = token
+
+    return unk_map
+
+def replace_symbols(line, unk_map):
+    tokens = line.split()
+    new_tokens = []
+
+    for token in tokens:
+        if token in unk_map:
+            new_tokens.append(unk_map[token])
+        else:
+            new_tokens.append(token)
+    return ' '.join(new_tokens)
+
 '''
 Source: Source with UNK Symbols
 Target: Target with no UNK Symbols
@@ -42,8 +67,10 @@ def main():
         logging.info('Source_line UNK: %s'% src_line)
         logging.info('Gold_line UNK: %s' % gold_line)
 
+        unk_map = build_unk_map(src_line, src_lines_nounk)
         for idx, translation in enumerate(translations):
-            logging.info('Tr:%d ::%s'%(idx, translation[1]))
+            translation_nounk = replace_symbols(translation[1], unk_map)
+            logging.info('Tr:%d ::%s'%(idx, translation_nounk))
 
 
 if __name__ == '__main__':
