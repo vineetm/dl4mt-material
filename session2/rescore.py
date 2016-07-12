@@ -32,7 +32,7 @@ def build_unk_map(source, source_nounk):
 
     unk_map = OrderedDict()
     for token, token_nounk in zip(tokens, tokens_nounk):
-        if token != tokens_nounk:
+        if token != token_nounk:
             unk_map[token_nounk] = token
 
     return unk_map
@@ -69,7 +69,7 @@ def main():
 
         unk_map = build_unk_map(src_line, src_line_nounk)
         logging.info('UNK_map: %s'% str(unk_map))
-        
+
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
             logging.info('Tr:%d ::%s'%(idx, translation_nounk))
