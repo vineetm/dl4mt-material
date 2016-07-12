@@ -64,10 +64,10 @@ def main():
     tm = TranslationModel(args.model)
     for src_line, src_line_nounk, gold_line in zip(src_lines, src_lines_nounk, gold_lines):
         translations = tm.translate(src_line, k=args.num)
-        logging.info('Source_line UNK: %s'% src_line)
-        logging.info('Gold_line UNK: %s' % gold_line)
+        logging.info('Source_line: %s'% src_lines_nounk)
+        logging.info('Gold_line: %s' % gold_line)
 
-        unk_map = build_unk_map(src_line, src_lines_nounk)
+        unk_map = build_unk_map(src_line, src_line_nounk)
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
             logging.info('Tr:%d ::%s'%(idx, translation_nounk))
