@@ -64,7 +64,7 @@ def main():
     tm = TranslationModel(args.model)
     for src_line, src_line_nounk, gold_line in zip(src_lines, src_lines_nounk, gold_lines):
         translations = tm.translate(src_line, k=args.num)
-        logging.info('Source_line: %s'% src_lines_nounk)
+        logging.info('Source_line: %s'% src_line_nounk)
         logging.info('Gold_line: %s' % gold_line)
 
         unk_map = build_unk_map(src_line, src_line_nounk)
