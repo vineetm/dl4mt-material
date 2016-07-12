@@ -17,7 +17,7 @@ def setup_args():
     parser.add_argument('source', help='Source Data')
     parser.add_argument('gold', help='Gold Translations')
     parser.add_argument('model', help='Trained Model')
-    parser.add_argument('--suffix', help='Original file without any symbols')
+    parser.add_argument('--suffix', help='Original file without any symbols', default='.nounk')
     parser.add_argument('--test', dest='test', action='store_true', help='Only test')
     parser.add_argument('--num', default=20, type=int)
     args = parser.parse_args()
