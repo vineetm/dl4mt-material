@@ -41,8 +41,9 @@ def main():
         translations = tm.translate(src_line, k=args.num)
         logging.info('Source_line UNK: %s'% src_line)
         logging.info('Gold_line UNK: %s' % gold_line)
+
         for idx, translation in enumerate(translations):
-            logging.info('Tr:%d :%s Score: %f Text:%s'%(idx, translation[0], translation[1]))
+            logging.info('Tr:%d ::%s'%(idx, translation[1]))
 
 
 if __name__ == '__main__':
