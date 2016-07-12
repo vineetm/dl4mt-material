@@ -33,7 +33,7 @@ def build_unk_map(source, source_nounk):
     unk_map = OrderedDict()
     for token, token_nounk in zip(tokens, tokens_nounk):
         if token != token_nounk:
-            unk_map[token_nounk] = token
+            unk_map[token] = token_nounk
 
     return unk_map
 
