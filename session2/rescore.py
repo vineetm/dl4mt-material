@@ -1,7 +1,8 @@
 import argparse, logging, codecs
 from translation_model import TranslationModel
 from collections import OrderedDict
-from nltk.translate.bleu_score import sentence_bleu as bleu
+import commands
+
 
 SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
 
@@ -13,6 +14,24 @@ SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
 4) Write train data for svm-rank, train svm rank
 5) In test only model, make predictions
 '''
+
+def get_bleu_score(gold, prediction):
+    fw_gold = codecs.open('temp.gold.txt', 'w', 'utf-8')
+    fw_gold.write(gold)
+
+    fw_hyp = codecs.open('temp.hyp.txt', 'w', 'utf-8')
+    fw_hyp.write(prediction)
+
+    cmd_bleu = 'multi-bleu.perl temp.gold.txt < temp.hyp.txt'
+
+    logging.info('Executing cmd:%s'% cmd_bleu)
+    (status, output) = commands.getstatusoutput(cmd_bleu)
+    logging.info(output)
+
+
+
+
+
 
 def setup_args():
     parser = argparse.ArgumentParser()
