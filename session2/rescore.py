@@ -147,7 +147,7 @@ def main():
             continue
 
         scores_index = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
-        write_train_data(fw, sentence_idx, train_id, translations_nounk, scores, scores_index, src_lines_nounk)
+        write_train_data(fw, sentence_idx, train_id, translations_nounk, scores, scores_index, src_line_nounk)
         train_id += 0
 
         for index in scores_index:
