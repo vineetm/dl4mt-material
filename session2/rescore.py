@@ -108,8 +108,8 @@ def main():
 
         scores_index = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
         for index in scores_index:
-            logging.info('Tr: %d Text:%s Pr:%f BLEU:%f'%(index, translations[index][0],
-                                                              translations[index][1], scores[index]))
+            logging.info('Tr: %d Text:%s Pr:%f BLEU:%f'%(index, translations[index][1],
+                                                              translations[index][0], scores[index]))
     logging.info('Num all zeros: %d'%num_all_zeros)
 
 if __name__ == '__main__':
