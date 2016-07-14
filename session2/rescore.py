@@ -25,7 +25,7 @@ def get_bleu_score(gold, prediction):
     cmd_bleu = "./multi-bleu.perl temp.gold.txt < temp.hyp.txt | cut -d ',' -f 1 | cut -d '=' -f 2"
 
     logging.info('Executing cmd:%s'% cmd_bleu)
-    (status, output) = commands.getstatusoutput(cmd_bleu)
+    output = commands.getoutput(cmd_bleu)
     logging.info(output)
     return float(output)
 
