@@ -22,15 +22,12 @@ def get_bleu_score(gold, prediction):
     fw_hyp = codecs.open('temp.hyp.txt', 'w', 'utf-8')
     fw_hyp.write(prediction)
 
-    cmd_bleu = 'multi-bleu.perl temp.gold.txt < temp.hyp.txt'
+    cmd_bleu = "multi-bleu.perl temp.gold.txt < temp.hyp.txt | cut -d ',' -f 1 | cut -d '=' -f 2"
 
     logging.info('Executing cmd:%s'% cmd_bleu)
     (status, output) = commands.getstatusoutput(cmd_bleu)
     logging.info(output)
-
-
-
-
+    return float(output)
 
 
 def setup_args():
@@ -92,7 +89,7 @@ def main():
 
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
-            bleu_nounk = bleu([gold_line.split()], translation_nounk.split(), (1,1,1,1))
+            bleu_nounk = get_bleu_score(gold_line, translation_nounk)
             logging.info('Tr:%d ::%s BLEU:%f'%(idx, translation_nounk, bleu_nounk))
 
 

@@ -1,0 +1,4 @@
+Use of uninitialized value in division (/) at ./multi-bleu.perl line 129, <STDIN> line 1.
+Use of uninitialized value in division (/) at ./multi-bleu.perl line 129, <STDIN> line 1.
+Use of uninitialized value in division (/) at ./multi-bleu.perl line 129, <STDIN> line 1.
+BLEU = 0.00, 41.7/0.0/0.0/0.0 (BP=1.000, ratio=1.500, hyp_len=12, ref_len=8)
