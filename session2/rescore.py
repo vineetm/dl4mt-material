@@ -96,14 +96,14 @@ def generate_features(src_line, translation):
     return features
 
 def write_train_data(fw, orig_id, train_id, translations, scores, scores_index, src_line):
-    fw.write('# Original ID: %d Source:%s'% (orig_id, src_line))
+    fw.write('# Original ID: %d Source:%s\n'% (orig_id, src_line))
 
     for num, id in enumerate(scores_index):
         features = generate_features(src_line, translations[id][1])
         features_kv = ['%d:%d'%(index+1, feature) for index,feature in enumerate(features)]
         rank = len(scores_index) - num
-        fw.write('#Translation: %s'% translations[id][1])
-        fw.write('%d qid:%d %s'%(rank, train_id, ' '.join(features_kv)))
+        fw.write('#Translation: %s\n'% translations[id][1])
+        fw.write('%d qid:%d %s\n'%(rank, train_id, ' '.join(features_kv)))
 
 
 '''
