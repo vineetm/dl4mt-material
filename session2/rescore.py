@@ -22,7 +22,7 @@ def get_bleu_score(gold, prediction):
     fw_hyp = codecs.open('temp.hyp.txt', 'w', 'utf-8')
     fw_hyp.write(prediction)
 
-    cmd_bleu = "multi-bleu.perl temp.gold.txt < temp.hyp.txt | cut -d ',' -f 1 | cut -d '=' -f 2"
+    cmd_bleu = "./multi-bleu.perl temp.gold.txt < temp.hyp.txt | cut -d ',' -f 1 | cut -d '=' -f 2"
 
     logging.info('Executing cmd:%s'% cmd_bleu)
     (status, output) = commands.getstatusoutput(cmd_bleu)
