@@ -3,8 +3,7 @@ from translation_model import TranslationModel
 from collections import OrderedDict
 import commands
 
-
-SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
+SVM_RANK_DATA='.svm_rank.data'
 
 
 '''
@@ -71,6 +70,11 @@ def replace_symbols(line, unk_map):
             new_tokens.append(token)
     return ' '.join(new_tokens)
 
+
+def write_train_data(fw, orig_id, train_id, translations, scores, scores_index, src_line):
+    fw.write('Original ID: %d'% orig_id)
+
+
 '''
 Source: Source with UNK Symbols
 Target: Target with no UNK Symbols
@@ -84,9 +88,12 @@ def main():
     src_lines_nounk = codecs.open(args.source + args.suffix, 'r', 'utf-8').readlines()
     gold_lines = codecs.open(args.gold + args.suffix, 'r', 'utf-8').readlines()
 
+    fw = codecs.open(args.model + SVM_RANK_DATA + 'w', 'utf-8')
+
     tm = TranslationModel(args.model)
     num_all_zeros = 0
 
+    train_id = 0
     for sentence_idx, (src_line, src_line_nounk, gold_line) in enumerate(zip(src_lines, src_lines_nounk, gold_lines)):
         translations = tm.translate(src_line, k=args.num)
         logging.info('Source_line: %s'% src_line_nounk)
@@ -96,8 +103,10 @@ def main():
         logging.info('UNK_map: %s'% str(unk_map))
 
         scores = []
+        translations_nounk = []
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
+            translations_nounk.append(translation_nounk)
             bleu_nounk = get_bleu_score(gold_line, translation_nounk)
             scores.append(bleu_nounk)
             #logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
@@ -107,6 +116,9 @@ def main():
             continue
 
         scores_index = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
+        write_train_data(fw, sentence_idx, train_id, translations_nounk, scores, scores_index, src_lines_nounk)
+        train_id += 0
+
         for index in scores_index:
             logging.info('Tr: %d Text:%s Pr:%f BLEU:%f'%(index, translations[index][1],
                                                               translations[index][0], scores[index]))
