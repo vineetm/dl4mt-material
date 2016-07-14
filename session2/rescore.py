@@ -85,6 +85,8 @@ def main():
     gold_lines = codecs.open(args.gold + args.suffix, 'r', 'utf-8').readlines()
 
     tm = TranslationModel(args.model)
+    num_all_zeros = 0
+
     for sentence_idx, (src_line, src_line_nounk, gold_line) in enumerate(zip(src_lines, src_lines_nounk, gold_lines)):
         translations = tm.translate(src_line, k=args.num)
         logging.info('Source_line: %s'% src_line_nounk)
@@ -100,10 +102,15 @@ def main():
             scores.append(bleu_nounk)
             #logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
 
+        if sum(scores) == 0.0:
+            num_all_zeros += 1
+            continue
+
         scores_index = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
         for index in scores_index:
-            logging.info('Tr: %d score:%f'%(index, scores[index]))
-
+            logging.info('Tr: %d Text:%s Pr:%f BLEU:%f'%(index, translation[index][0],
+                                                              translation[index][1], scores[index]))
+    logging.info('Num all zeros: %d'%num_all_zeros)
 
 if __name__ == '__main__':
     main()
