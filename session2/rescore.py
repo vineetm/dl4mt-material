@@ -18,16 +18,22 @@ SVM_RANK_MODEL_SUFFIX='.svm_rank.model'
 def get_bleu_score(gold, prediction):
     fw_gold = codecs.open('temp.gold.txt', 'w', 'utf-8')
     fw_gold.write(gold)
+    fw_gold.close()
 
     fw_hyp = codecs.open('temp.hyp.txt', 'w', 'utf-8')
     fw_hyp.write(prediction)
+    fw_hyp.close()
 
-    cmd_bleu = "./multi-bleu.perl temp.gold.txt < temp.hyp.txt | cut -d ',' -f 1 | cut -d '=' -f 2"
-
+    cmd_bleu = "./multi-bleu.perl temp.gold.txt < temp.hyp.txt | tail -1 | cut -d ',' -f 1 | cut -d '=' -f 2"
     logging.info('Executing cmd:%s'% cmd_bleu)
-    output = commands.getoutput(cmd_bleu)
-    logging.info(output)
-    return float(output)
+    (status, output) = commands.getstatusoutput(cmd_bleu)
+    logging.info('Status: %s Output:%s'%(status, output))
+
+    try:
+      bleu = float(output)
+    except ValueError:
+      bleu = 0.0
+    return bleu
 
 
 def setup_args():
@@ -90,7 +96,7 @@ def main():
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
             bleu_nounk = get_bleu_score(gold_line, translation_nounk)
-            logging.info('Tr:%d ::%s BLEU:%f'%(idx, translation_nounk, bleu_nounk))
+            logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
 
 
 if __name__ == '__main__':
