@@ -85,7 +85,7 @@ def main():
     gold_lines = codecs.open(args.gold + args.suffix, 'r', 'utf-8').readlines()
 
     tm = TranslationModel(args.model)
-    for src_line, src_line_nounk, gold_line in zip(src_lines, src_lines_nounk, gold_lines):
+    for sentence_idx, (src_line, src_line_nounk, gold_line) in enumerate(zip(src_lines, src_lines_nounk, gold_lines)):
         translations = tm.translate(src_line, k=args.num)
         logging.info('Source_line: %s'% src_line_nounk)
         logging.info('Gold_line: %s' % gold_line)
@@ -93,10 +93,16 @@ def main():
         unk_map = build_unk_map(src_line, src_line_nounk)
         logging.info('UNK_map: %s'% str(unk_map))
 
+        scores = []
         for idx, translation in enumerate(translations):
             translation_nounk = replace_symbols(translation[1], unk_map)
             bleu_nounk = get_bleu_score(gold_line, translation_nounk)
-            logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
+            scores.append(bleu_nounk)
+            #logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
+
+        scores_index = sorted(range(len(scores)), key=lambda k: a[k], reverse=True)
+        for index in scores_index:
+            logging.info('Tr: %d score:%f'%(index, scores[index]))
 
 
 if __name__ == '__main__':
