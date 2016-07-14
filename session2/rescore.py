@@ -100,7 +100,7 @@ def main():
             scores.append(bleu_nounk)
             #logging.info('Tr:%d ::%s BLEU:%s'%(idx, translation_nounk, bleu_nounk))
 
-        scores_index = sorted(range(len(scores)), key=lambda k: a[k], reverse=True)
+        scores_index = sorted(range(len(scores)), key=lambda k: scores[k], reverse=True)
         for index in scores_index:
             logging.info('Tr: %d score:%f'%(index, scores[index]))
 
