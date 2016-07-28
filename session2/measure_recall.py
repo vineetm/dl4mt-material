@@ -38,7 +38,7 @@ def replace_symbols(sentence, unk_map):
 
 
 def find_match(gold, translations):
-    for index, translation in translations:
+    for index, translation in enumerate(translations):
         if gold == translation:
             return index
     return -1
