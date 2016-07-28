@@ -38,8 +38,10 @@ def replace_symbols(sentence, unk_map):
 
 
 def find_match(gold, translations):
+    # logging.info('Gold: %s' % gold)
     for index, translation in enumerate(translations):
-        if gold == translation:
+        # logging.info('Translation: %s'% translation)
+        if gold.strip() == translation.strip():
             return index
     return -1
 
@@ -52,17 +54,18 @@ def main():
     tm = TranslationModel(args.model)
     input_lines_symbols = codecs.open(args.input , 'r', 'utf-8')
     input_lines = codecs.open(args.input + '.nounk',  'r', 'utf-8')
-
     gold_lines = codecs.open(args.gold + '.nounk', 'r', 'utf-8')
 
     index = 0
     found = 0
     for input_line, input_line_symbols, gold_line in zip(input_lines, input_lines_symbols, gold_lines):
         unk_map = build_unk_map(input_line_symbols, input_line)
+        # logging.info(unk_map)
+
         translations_with_scores = tm.translate(input_line_symbols, k=args.k)
         translations = [data[1] for data in translations_with_scores]
 
-        translations_replaced = [replace_symbols(translation, unk_map) for translation in  translations]
+        translations_replaced = [replace_symbols(translation, unk_map) for translation in translations]
         match_index = find_match(gold_line, translations_replaced)
         logging.info('Index: %d Match: %d'%(index, match_index))
 
