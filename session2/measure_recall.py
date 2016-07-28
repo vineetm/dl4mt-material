@@ -7,7 +7,7 @@ from nltk.translate.bleu_score import sentence_bleu as bleu
 def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='Trained Model')
-    parser.add_argument('k', help='# of Translations')
+    parser.add_argument('k', help='# of Translations', type=int)
     parser.add_argument('input', help='Input sequence')
     parser.add_argument('gold', help='Gold output')
     args = parser.parse_args()
