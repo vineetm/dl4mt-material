@@ -1,7 +1,7 @@
 '''
 Build a neural machine translation model with soft attention
 '''
-import theano
+import theano, logging
 import theano.tensor as tensor
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
@@ -979,6 +979,21 @@ def sgd(lr, tparams, grads, x, mask, y, cost):
     return f_grad_shared, f_update
 
 
+# Convert sampled sequence to sentence
+# 0 indicates EOS, 1 indicates UNK
+def generate_sentence(x, jj, rev_dict):
+    tokens = []
+    for vv in x[:, jj]:
+        if vv == 0:
+            break
+        if vv in rev_dict:
+            tokens.append(rev_dict[vv])
+        else:
+            tokens.append(rev_dict[1])
+
+    return ' '.join(tokens)
+
+
 def train(dim_word=100,  # word vector dimensionality
           dim=1000,  # the number of LSTM units
           encoder='gru',
@@ -1028,11 +1043,11 @@ def train(dim_word=100,  # word vector dimensionality
 
     # reload options
     if reload_ and os.path.exists(saveto):
-        print 'Reloading model options'
+        logging.info('Reloading model options')
         with open('%s.pkl' % saveto, 'rb') as f:
             model_options = pkl.load(f)
 
-    print 'Loading data'
+    logging.info('Loading data')
     train = TextIterator(datasets[0], datasets[1],
                          dictionaries[0], dictionaries[1],
                          n_words_source=n_words_src, n_words_target=n_words,
@@ -1044,11 +1059,11 @@ def train(dim_word=100,  # word vector dimensionality
                          batch_size=valid_batch_size,
                          maxlen=maxlen)
 
-    print 'Building model'
+    logging.info('Building model')
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
-        print 'Reloading model parameters'
+        logging.info('Reloading model parameters')
         params = load_params(saveto, params)
 
     tparams = init_tparams(params)
@@ -1060,13 +1075,13 @@ def train(dim_word=100,  # word vector dimensionality
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
 
-    print 'Building sampler'
+    logging.info('Building sampler')
     f_init, f_next = build_sampler(tparams, model_options, trng, use_noise)
 
     # before any regularizer
-    print 'Building f_log_probs...',
+    logging.info('Building f_log_probs...')
     f_log_probs = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    logging.info('Done')
 
     cost = cost.mean()
 
@@ -1088,13 +1103,13 @@ def train(dim_word=100,  # word vector dimensionality
         cost += alpha_reg
 
     # after all regularizers - compile the computational graph for cost
-    print 'Building f_cost...',
+    logging.info('Building f_cost...')
     f_cost = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    logging.info('Done')
 
-    print 'Computing gradient...',
+    logging.info('Computing gradient...')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
-    print 'Done'
+    logging.info('Done')
 
     # apply gradient clipping here
     if clip_c > 0.:
@@ -1110,11 +1125,11 @@ def train(dim_word=100,  # word vector dimensionality
 
     # compile the optimizer, the actual computational graph is compiled here
     lr = tensor.scalar(name='lr')
-    print 'Building optimizers...',
+    logging.info('Building optimizers...')
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
-    print 'Done'
+    logging.info('Done')
 
-    print 'Optimization'
+    logging.info('Optimization')
 
     best_p = None
     bad_counter = 0
@@ -1148,7 +1163,7 @@ def train(dim_word=100,  # word vector dimensionality
                                                 n_words=n_words)
 
             if x is None:
-                print 'Minibatch with zero sample under length ', maxlen
+                logging.warning('Minibatch with zero sample under length %d'% maxlen)
                 uidx -= 1
                 continue
 
@@ -1165,33 +1180,33 @@ def train(dim_word=100,  # word vector dimensionality
             # check for bad numbers, usually we remove non-finite elements
             # and continue training - but not done here
             if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
+                logging.error('NaN detected')
                 return 1., 1., 1.
 
             # verbose
             if numpy.mod(uidx, dispFreq) == 0:
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'UD ', ud
+                logging.info('Epoch: %d Update: %d Cost: %f UD: %f'%(eidx, uidx, cost, ud))
 
             # save the best model so far, in addition, save the latest model
             # into a separate file with the iteration number for external eval
             if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving the best model...',
+                logging.info('Update: %d Saving the best model'%uidx)
                 if best_p is not None:
                     params = best_p
                 else:
                     params = unzip(tparams)
                 numpy.savez(saveto, history_errs=history_errs, uidx=uidx, **params)
                 pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
-                print 'Done'
+                logging.info('Done')
 
                 # save with uidx
                 if not overwrite:
-                    print 'Saving the model at iteration {}...'.format(uidx),
+                    logging.info('Saving the model at iteration: %d...'%uidx)
                     saveto_uidx = '{}.iter{}.npz'.format(
                         os.path.splitext(saveto)[0], uidx)
                     numpy.savez(saveto_uidx, history_errs=history_errs,
                                 uidx=uidx, **unzip(tparams))
-                    print 'Done'
+                    logging.info('Done')
 
 
             # generate some samples with the model and display them
@@ -1205,24 +1220,11 @@ def train(dim_word=100,  # word vector dimensionality
                                                maxlen=30,
                                                stochastic=stochastic,
                                                argmax=False)
-                    print 'Source ', jj, ': ',
-                    for vv in x[:, jj]:
-                        if vv == 0:
-                            break
-                        if vv in worddicts_r[0]:
-                            print worddicts_r[0][vv],
-                        else:
-                            print 'UNK',
-                    print
-                    print 'Truth ', jj, ' : ',
-                    for vv in y[:, jj]:
-                        if vv == 0:
-                            break
-                        if vv in worddicts_r[1]:
-                            print worddicts_r[1][vv],
-                        else:
-                            print 'UNK',
-                    print
+
+                    logging.info('Source %d: %s'%(jj, generate_sentence(x, jj, worddicts_r[0])))
+                    logging.info('Truth %d: %s' % (jj, generate_sentence(y, jj, worddicts_r[1])))
+
+                    sample_tokens = []
                     print 'Sample ', jj, ': ',
                     if stochastic:
                         ss = sample
@@ -1233,10 +1235,10 @@ def train(dim_word=100,  # word vector dimensionality
                         if vv == 0:
                             break
                         if vv in worddicts_r[1]:
-                            print worddicts_r[1][vv],
+                            sample_tokens.append(worddicts_r[1][vv])
                         else:
-                            print 'UNK',
-                    print
+                            sample_tokens.append(worddicts_r[1][1])
+                    logging.info('Sample %d: %s' % (jj, ' '.join(sample_tokens)))
 
             # validate model on validation set and early stop if necessary
             if numpy.mod(uidx, validFreq) == 0:
@@ -1253,22 +1255,22 @@ def train(dim_word=100,  # word vector dimensionality
                         numpy.array(history_errs)[:-patience].min():
                     bad_counter += 1
                     if bad_counter > patience:
-                        print 'Early Stop!'
+                        logging.info('Early Stop!')
                         estop = True
                         break
 
                 if numpy.isnan(valid_err):
                     ipdb.set_trace()
 
-                print 'Valid ', valid_err
+                logging.info('VALID %d: %f'%(uidx, valid_err))
 
             # finish after this many updates
             if uidx >= finish_after:
-                print 'Finishing after %d iterations!' % uidx
+                logging.info('Finishing after %d iterations!' % uidx)
                 estop = True
                 break
 
-        print 'Seen %d samples' % n_samples
+        #print 'Seen %d samples' % n_samples
 
         if estop:
             break
@@ -1280,7 +1282,7 @@ def train(dim_word=100,  # word vector dimensionality
     valid_err = pred_probs(f_log_probs, prepare_data,
                            model_options, valid).mean()
 
-    print 'Valid ', valid_err
+    logging.info('Final VALID %f'% valid_err)
 
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p,

@@ -54,6 +54,7 @@ def setup_args():
 
 
 def main():
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     args = setup_args()
     logging.info(args)
 
