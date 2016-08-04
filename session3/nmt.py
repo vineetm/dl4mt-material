@@ -687,10 +687,10 @@ def build_sampler(tparams, options, trng, use_noise):
     init_state = get_layer('ff')[1](tparams, ctx_mean, options,
                                     prefix='ff_state', activ='tanh')
 
-    print 'Building f_init...',
+    logging.info('Building f_init...')
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
-    print 'Done'
+    logging.info('Done')
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -733,11 +733,11 @@ def build_sampler(tparams, options, trng, use_noise):
 
     # compile a function to do the whole thing above, next word probability,
     # sampled word for the next target, next hidden state to be used
-    print 'Building f_next..',
+    logging.info('Building f_next..')
     inps = [y, ctx, init_state]
     outs = [next_probs, next_sample, next_state]
     f_next = theano.function(inps, outs, name='f_next', profile=profile)
-    print 'Done'
+    logging.info('Done')
 
     return f_init, f_next
 
@@ -860,8 +860,8 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
         if numpy.isnan(numpy.mean(probs)):
             ipdb.set_trace()
 
-        if verbose:
-            print >>sys.stderr, '%d samples computed' % (n_done)
+        #if verbose:
+        #    print >>sys.stderr, '%d samples computed' % (n_done)
 
     return numpy.array(probs)
 
@@ -1225,7 +1225,6 @@ def train(dim_word=100,  # word vector dimensionality
                     logging.info('Truth %d: %s' % (jj, generate_sentence(y, jj, worddicts_r[1])))
 
                     sample_tokens = []
-                    print 'Sample ', jj, ': ',
                     if stochastic:
                         ss = sample
                     else:
