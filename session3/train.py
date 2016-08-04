@@ -65,7 +65,8 @@ def main():
           datasets=['%s/train_src.txt'%args.base, '%s/train_target.txt'%args.base],
           valid_datasets=['%s/valid_src.txt'%args.base, '%s/valid_target.txt'%args.base],
           dictionaries=['%s/all.txt.pkl'%args.base, '%s/all.txt.pkl'%args.base],
-          use_dropout=args.dropout)
+          use_dropout=args.dropout,
+          word_vec=args.wordvec)
 
 if __name__ == '__main__':
     main()

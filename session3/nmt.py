@@ -994,6 +994,34 @@ def generate_sentence(x, jj, rev_dict):
     return ' '.join(tokens)
 
 
+def load_word_vec(word_vec, params, model_options, srcDict, targetDict):
+    from gensim.models import Word2Vec
+    model = Word2Vec.load(word_vec)
+    logging.info('Word_Vec: %d words'% len(model.vocab))
+
+    #Replace randomly initialized word vectors for 'Wemb' layer
+    numFoundSrc = 0
+    for token in srcDict:
+        if srcDict[token] >= model_options['n_words_src']:
+            continue
+        if token in model.vocab:
+            params['Wemb'][srcDict[token]] = model[token]
+            numFoundSrc += 1
+
+    # Replace randomly initialized word vectors for 'Wemb_dec' layer
+    numFoundTarget = 0
+    for token in targetDict:
+        if targetDict[token] >= model_options['n_words']:
+            continue
+        if token in model.vocab:
+            params['Wemb_dec'][targetDict[token]] = model[token]
+            numFoundTarget += 1
+
+    logging.info('Word2Vec:%d Src:%d/%d Target:%d/%d'%(len(model.vocab), numFoundSrc,
+                                                       model_options['n_words_src'],
+                                                       numFoundTarget, model_options['n_words']))
+
+
 def train(dim_word=100,  # word vector dimensionality
           dim=1000,  # the number of LSTM units
           encoder='gru',
@@ -1026,7 +1054,8 @@ def train(dim_word=100,  # word vector dimensionality
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
           use_dropout=False,
           reload_=False,
-          overwrite=False):
+          overwrite=False,
+          word_vec=None):
 
     # Model options
     model_options = locals().copy()
@@ -1047,6 +1076,7 @@ def train(dim_word=100,  # word vector dimensionality
         with open('%s.pkl' % saveto, 'rb') as f:
             model_options = pkl.load(f)
 
+
     logging.info('Loading data')
     train = TextIterator(datasets[0], datasets[1],
                          dictionaries[0], dictionaries[1],
@@ -1065,6 +1095,9 @@ def train(dim_word=100,  # word vector dimensionality
     if reload_ and os.path.exists(saveto):
         logging.info('Reloading model parameters')
         params = load_params(saveto, params)
+
+    if not reload_ and word_vec is not None:
+        load_word_vec(word_vec, params, model_options, worddicts[0], worddicts[1])
 
     tparams = init_tparams(params)
 
